@@ -997,14 +997,13 @@ export function effectivePolicy(
   const control = document["control-plane"];
   if (!control) return deny("control-plane-absent");
 
-  const campaignPolicy = standalone
-    ? (Object.hasOwn(control.workflows ?? {}, workflowName) ? control.workflows[workflowName] : undefined)
-    : (control.campaigns ?? {})[campaignName];
+  const ownEntry = (map, key) => (Object.hasOwn(map ?? {}, key) ? map[key] : undefined);
+  const campaignPolicy = standalone ? ownEntry(control.workflows, workflowName) : ownEntry(control.campaigns, campaignName);
   const kind = standalone ? "workflow" : "campaign";
   if (!campaignPolicy) return deny(`${kind}-undeclared`);
   if (!(campaignPolicy.enabled ?? true)) return deny(`${kind}-disabled`);
   const workers = campaignPolicy.workers ?? {};
-  if (role === "worker" && !(workerName in workers)) {
+  if (role === "worker" && !Object.hasOwn(workers, workerName)) {
     throw new PolicyError(`unknown worker: ${campaignName}/${workerName}`);
   }
 

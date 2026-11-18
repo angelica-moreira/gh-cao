@@ -974,6 +974,15 @@ test("control policy disables campaigns by absence and requires declared workers
   assert.equal(disabledCampaignWorker.output.reason, "campaign-disabled");
 });
 
+test("control policy ignores inherited object names for campaigns and workers", () => {
+  const inheritedCampaign = effective(minimalPolicy, { campaignName: "constructor" });
+  const inheritedWorker = effective(minimalPolicy, { role: "worker", worker: "constructor" });
+
+  assert.equal(inheritedCampaign.output.reason, "campaign-undeclared");
+  assert.notEqual(inheritedWorker.status, 0);
+  assert.match(inheritedWorker.stderr, /unknown worker: dependabot\/constructor/);
+});
+
 test("control policy intersects campaign mode, dispatch request, and worker ceiling", () => {
   const reviewRequest = effective(minimalPolicy, {
     role: "worker",
