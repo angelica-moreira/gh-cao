@@ -647,6 +647,15 @@ test("control precompute binds live worker output to the authorized target", () 
   assert.match(result.stderr, /live worker safe_output_repo must equal target_repo/);
 });
 
+for (const [requested, ok] of [["acme/other", false], ["ACME/Target", true]]) {
+  test(`control precompute checks the raw live worker destination ${requested}`, () => {
+    const result = runLiveWorker({ CAO_REQUESTED_SAFE_OUTPUT_REPOSITORY: requested });
+
+    if (ok) assert.equal(result.status, 0, result.stderr);
+    else assert.match(result.stderr, /live worker safe_output_repo must equal target_repo/);
+  });
+}
+
 test("control precompute does not fetch target-owned authority", () => {
   const result = runLiveWorker({}, undefined);
 

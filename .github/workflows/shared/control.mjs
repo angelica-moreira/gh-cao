@@ -771,6 +771,10 @@ function validateWorkerDispatch(context) {
   if (context.mode === "live" && context.workerPolicy.maxMode !== "live") {
     throw new ControlError("safe_output_mode exceeds the worker_max_mode ceiling");
   }
+  const requested = context.requestedSafeOutputRepository;
+  if (context.mode === "live" && requested && !repositoryEqual(requested, context.targetRepository)) {
+    throw new ControlError("live worker safe_output_repo must equal target_repo");
+  }
   if (context.mode === "debug") {
     logDecision("worker-dispatch-envelope", "not-required", { mode: "debug", safe_outputs_staged: true });
     return;
@@ -810,6 +814,7 @@ function createContext(policy) {
     targetRepository: environment("CAO_TARGET_REPOSITORY") || environment("CAO_DEFAULT_TARGET_REPOSITORY"),
     dispatchMaximum: parseInteger(environment("CAO_DISPATCH_MAX"), 1),
     safeOutputRepository: environment("CAO_SAFE_OUTPUT_REPOSITORY"),
+    requestedSafeOutputRepository: environment("CAO_REQUESTED_SAFE_OUTPUT_REPOSITORY"),
     correlationId: environment("CAO_CORRELATION_ID"),
     centralRepository: role === "orchestrator" || debug ? environment("GITHUB_REPOSITORY") : environment("CAO_CENTRAL_REPOSITORY"),
     controlPlaneRunUrl: environment("CAO_CONTROL_PLANE_RUN_URL"),
