@@ -379,10 +379,12 @@ include tokens or upstream error bodies.
 
 ### Outbound trust and CA compromise
 
-Build the server and native CLI with Go 1.27.3 or newer. All three Go modules
+Build the server and native CLI with Go 1.27.4 or newer. All three Go modules
 require this version so that an installed, unpatched Go 1.27 toolchain cannot
 satisfy a lower Go 1.26 minimum. Go 1.27.3 is a patched release identified by the
 [October 2026 eMudhra incident report](https://emudhra.we-have-a-problem.com/).
+Go 1.27.4 also fixes [GO-2026-6859](https://pkg.go.dev/vuln/GO-2026-6859), an
+HTTP/1 server panic when `MaxBytesReader` races with a response-header write.
 Keep build toolchains, operating-system trust stores, and container CA packages
 current. Rebuild and redeploy existing binaries and images: changing `go.mod`
 does not repair already deployed executables. Browser revocation updates do not

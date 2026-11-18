@@ -135,7 +135,7 @@ jobs:
             dashboard/site/package-lock.json
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache: false
       - name: Install dependencies
         run: npm ci && npm ci --prefix dashboard/site
@@ -173,7 +173,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -203,7 +203,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -246,7 +246,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -320,7 +320,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -346,7 +346,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: internal/dashboardquery/go.sum
       - name: Download Go modules
         run: go -C internal/dashboardquery mod download
@@ -401,7 +401,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -425,7 +425,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -501,7 +501,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
@@ -608,7 +608,7 @@ jobs:
           cache: npm
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
-          go-version: 1.27.3
+          go-version: 1.27.4
           cache-dependency-path: |
             server/go.sum
             internal/dashboardquery/go.sum
