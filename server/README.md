@@ -3746,7 +3746,7 @@ guidance, limitations, and private vulnerability-reporting process.
 
 ## Run locally
 
-Go 1.27.3 is pinned.
+Go 1.27.4 is pinned.
 
 On macOS with Homebrew:
 
@@ -4133,7 +4133,7 @@ npm run test:e2e:dashboard-server
 `.github/workflows/cgo.yml` keeps server validation separate from the static
 dashboard CI:
 
-- **Go format, lint, and tests** runs Go 1.27.3, golangci-lint v2.14.0, and the
+- **Go format, lint, and tests** runs Go 1.27.4, golangci-lint v2.14.0, and the
   server unit suite.
 - **Redis dashboard integration** starts Redis, runs the Redis integration
   tests, builds the dashboard and server, ingests the deployed shard subset,
