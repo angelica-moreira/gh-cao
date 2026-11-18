@@ -211,12 +211,17 @@ jobs:
         run: go -C server mod download
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
       - name: Check formatting
         working-directory: server
         run: golangci-lint fmt --diff
       - name: Lint
         working-directory: server
         run: golangci-lint run ./...
+      - name: Check reachable Go vulnerabilities
+        working-directory: server
+        run: govulncheck ./...
 
   server-tests:
     name: Go unit tests (${{ matrix.area }}, shard ${{ matrix.shard }})

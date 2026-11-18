@@ -94,6 +94,8 @@ jobs:
           cache-dependency-path: go.sum
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
       - name: Install official Bicep validator for topology samples
         shell: bash
         run: |
@@ -117,6 +119,10 @@ jobs:
         run: |
           golangci-lint fmt --diff
           golangci-lint run ./...
+      - name: Check reachable Go vulnerabilities
+        run: |
+          govulncheck ./...
+          govulncheck -C internal/dashboardquery ./...
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
