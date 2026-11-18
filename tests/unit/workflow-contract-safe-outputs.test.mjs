@@ -386,6 +386,13 @@ test("review bundles persist redacted patch evidence before publishing", () => {
   assert.match(uploadStep, /if: steps\.prepare\.outputs\.skip_upload != 'true'/);
 });
 
+test("Repo Assist PR upkeep binds branch pushes to the review destination outside live mode", () => {
+  const destination = "${{ (inputs.safe_output_mode || 'review') == 'review' && (inputs.safe_output_repo || github.repository) || inputs.target_repo }}";
+  const outputs = parse(/^---\n([\s\S]*?)\n---/.exec(workflow("repo-assist-pr-upkeep.md"))[1])["safe-outputs"];
+  assert.equal(outputs["push-to-pull-request-branch"]["target-repo"], destination);
+  assert.equal(outputs["create-issue"]["target-repo"], destination);
+});
+
 test("review bundle preparation fails on missing requested evidence but permits a genuine no-op", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "cao-review-bundle-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));

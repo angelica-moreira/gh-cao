@@ -119,7 +119,7 @@ tools:
 safe-outputs:
   push-to-pull-request-branch:
     target: "*"
-    target-repo: ${{ inputs.target_repo }}
+    target-repo: ${{ (inputs.safe_output_mode || 'review') == 'review' && (inputs.safe_output_repo || github.repository) || inputs.target_repo }}
     required-title-prefix: "[repo-assist:"
     max: 1
     if-no-changes: ignore
