@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -35,6 +36,8 @@ var fuzzArchiveSeeds = []fuzzArchiveSeed{
 	{"root/dashboard/dev", []byte{tar.TypeChar, tar.TypeFifo}, 0o644, "", nil},
 	{"../dashboard/escape.js", []byte{tar.TypeReg}, 0o644, "", []byte("x")},
 	{"root/../../dashboard/escape.js\nroot/demo/../../../escape", []byte{tar.TypeReg}, 0o644, "", []byte("x")},
+	{".\n./", []byte{tar.TypeDir}, 0o755, "", nil},
+	{"root/demo/sub/\n../outside/", []byte{tar.TypeDir}, 0o777, "", nil},
 }
 
 func addFuzzArchiveSeeds(f *testing.F) {
@@ -71,8 +74,29 @@ func fuzzArchive(names string, types []byte, mode int64, link string, data []byt
 	return buffer.Bytes(), true
 }
 
-// assertConfinedTree fails when anything other than plain directories and
-// non-setuid regular files exists under parent, or anything exists outside allowed.
+func isWithin(base, name string) bool {
+	relative, err := filepath.Rel(base, name)
+	return err == nil && filepath.IsLocal(relative)
+}
+
+// confinedEntryError reports why an extracted entry breaks confinement, or "" when it is allowed.
+// Directories leading to allowed are harness scaffolding. Windows has no Unix permission bits.
+func confinedEntryError(name, allowed string, mode fs.FileMode) string {
+	switch {
+	case !mode.IsDir() && !mode.IsRegular():
+		return "non-regular entry"
+	case mode.IsDir() && name != allowed && isWithin(name, allowed):
+		return ""
+	case !isWithin(allowed, name):
+		return "entry outside " + allowed
+	case runtime.GOOS != "windows" && (mode.Perm()&^0o755 != 0 || mode&(fs.ModeSetuid|fs.ModeSetgid|fs.ModeSticky) != 0):
+		return "unsafe mode " + mode.String()
+	}
+	return ""
+}
+
+// assertConfinedTree fails when anything under parent other than plain directories
+// and regular files with safe modes exists, or anything exists outside allowed.
 func assertConfinedTree(t *testing.T, parent, allowed string) {
 	t.Helper()
 	err := filepath.WalkDir(parent, func(name string, entry fs.DirEntry, err error) error {
@@ -83,16 +107,8 @@ func assertConfinedTree(t *testing.T, parent, allowed string) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && !info.Mode().IsRegular() {
-			t.Fatalf("extracted non-regular entry %s (%s)", name, info.Mode())
-		}
-		if info.Mode().IsRegular() {
-			if info.Mode().Perm()&^0o755 != 0 || info.Mode()&(fs.ModeSetuid|fs.ModeSetgid|fs.ModeSticky) != 0 {
-				t.Fatalf("extracted %s with mode %s", name, info.Mode())
-			}
-			if relative, err := filepath.Rel(allowed, name); err != nil || !filepath.IsLocal(relative) {
-				t.Fatalf("extracted %s outside %s", name, allowed)
-			}
+		if problem := confinedEntryError(name, allowed, info.Mode()); problem != "" {
+			t.Fatalf("extracted %s: %s", name, problem)
 		}
 		return nil
 	})
@@ -138,7 +154,7 @@ func FuzzNativeExtractRuntime(f *testing.F) {
 		assertConfinedTree(t, parent, destination)
 		if err == nil {
 			if relative, relErr := filepath.Rel(destination, root); relErr != nil || !filepath.IsLocal(relative) || strings.ContainsRune(relative, filepath.Separator) {
-				t.Fatalf("runtime root %s is not a direct child of %s", root, destination)
+				t.Fatalf("runtime root %s is neither %s nor a direct child of it", root, destination)
 			}
 		}
 	})
