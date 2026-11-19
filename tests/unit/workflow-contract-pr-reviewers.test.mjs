@@ -270,3 +270,25 @@ test("prefetch fails closed on API errors, incomplete pagination, invalid identi
   assert.notEqual(prefetch({ head: "different-head" }).status, 0);
   assert.notEqual(prefetch({ number: "42; echo injected" }).status, 0);
 });
+
+test("workflow PR validator provisions suite prerequisites before running validators", () => {
+  const steps = config(workflow("pr-reviewer.md")).steps;
+  const index = (predicate) => steps.findIndex(predicate);
+  const validator = index((step) => step.name === "Run all validator commands");
+  const before = (predicate) => {
+    const position = index(predicate);
+    assert.ok(position >= 0 && position < validator, `missing prerequisite before validators: ${predicate}`);
+  };
+  before((step) => step.run === "npm ci --prefix dashboard/site");
+  before((step) => step.uses?.startsWith("actions/setup-go@"));
+  before((step) => step.uses === "./.github/actions/setup-gh-aw");
+  const startsPostgres = /^docker run .*--publish 127\.0\.0\.1:5432:5432 postgres:16-alpine/s;
+  const waitsForTcp = (run) =>
+    !/pg_isready(?! -h 127\.0\.0\.1 )/.test(run) &&
+    /for \(\(attempt[\s\S]*pg_isready[\s\S]*done\n.*pg_isready -h 127\.0\.0\.1 [^\n]*\n?$/.test(run);
+  before((step) => startsPostgres.test(step.run ?? "") && waitsForTcp(step.run));
+  assert.equal(new URL(steps[validator].env.POSTGRES_URL).hostname, "127.0.0.1");
+  const cleanup = index((step) => step.run?.startsWith("docker rm --force cao-validator-postgres"));
+  assert.ok(cleanup > validator);
+  assert.equal(steps[cleanup].if, "always()");
+});

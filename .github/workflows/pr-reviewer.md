@@ -44,8 +44,34 @@ steps:
       cache: npm
   - name: Install dependencies
     run: npm ci
+  # The validator suites need the same prerequisites as workflow-contracts.yml.
+  - name: Install dashboard dependencies
+    run: npm ci --prefix dashboard/site
+  - name: Set up Go
+    uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32  # v5.0.2
+    with:
+      go-version-file: go.mod
+      cache-dependency-path: |
+        go.sum
+        server/go.sum
+        internal/dashboardquery/go.sum
+  - name: Install gh-aw
+    uses: ./.github/actions/setup-gh-aw  # zizmor: ignore[self-repository] - Local actions use the syntax accepted by GitHub Actions and actionlint.
+  - name: Start disposable PostgreSQL
+    shell: bash
+    run: |
+      docker run --detach --name cao-validator-postgres \
+        --env POSTGRES_DB=cao_contracts --env POSTGRES_HOST_AUTH_METHOD=trust \
+        --publish 127.0.0.1:5432:5432 postgres:16-alpine -c max_locks_per_transaction=512
+      for ((attempt = 1; attempt <= 30; attempt++)); do
+        if docker exec cao-validator-postgres pg_isready -h 127.0.0.1 -U postgres -d cao_contracts; then break; fi
+        sleep 1
+      done
+      docker exec cao-validator-postgres pg_isready -h 127.0.0.1 -U postgres -d cao_contracts
   - name: Run all validator commands
     shell: bash
+    env:
+      POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/cao_contracts?sslmode=disable
     run: |
       set -euo pipefail
       mkdir -p /tmp/gh-aw/agent/pr-reviewer
@@ -76,6 +102,9 @@ steps:
         .passed = ([.checks[] | select(.status == 0)] | length)
       ' "$SUMMARY" > "${SUMMARY}.tmp"
       mv "${SUMMARY}.tmp" "$SUMMARY"
+  - name: Stop disposable PostgreSQL
+    if: always()
+    run: docker rm --force cao-validator-postgres || true
 safe-outputs:
   create-pull-request-review-comment:
     max: 20
