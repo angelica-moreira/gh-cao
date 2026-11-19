@@ -8,8 +8,18 @@ import { validateDashboardDocument } from '../src/validator.js';
 const repositoryRoot = resolve(process.cwd(), '../..');
 const ignoredDirectories = new Set(['.cao', '.git', '.tmp', 'coverage', 'dist', 'node_modules', 'test-results']);
 
+async function readDirectoryEntries(directory) {
+  try {
+    return await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    // Temporary directories created by concurrent tools can vanish mid-scan.
+    if (error?.code === 'ENOENT' && directory !== repositoryRoot) return [];
+    throw error;
+  }
+}
+
 async function findDashboardDocuments(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
+  const entries = await readDirectoryEntries(directory);
   const documents = [];
 
   for (const entry of entries) {
